@@ -1,0 +1,14 @@
+#!/bin/env bash
+
+# local/env.tar.gz是一个jumbo的环境，解压之后设置一下环境变量即可
+mkdir -p $HOME/adfe
+
+# 解压需要的内容
+cd local
+tar zxf env.tar.gz -C $HOME/adfe
+cd ..
+
+export PATH=$HOME/adfe/.jumbo/bin:$PATH
+
+# Run app
+node app.js
