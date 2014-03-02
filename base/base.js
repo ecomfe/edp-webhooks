@@ -30,6 +30,12 @@ exports.download = function( url, opt_saved ) {
     var path = require( 'path' );
 
     var fullPath = opt_saved || path.basename( url );
+
+    var dir = path.dirname( fullPath );
+    if ( !fs.existsSync( dir ) ) {
+        require( 'mkdirp' ).sync( dir );
+    }
+
     var stream = fs.createWriteStream( fullPath );
     lib.get( url, function( res ) {
         try {
@@ -55,6 +61,53 @@ exports.md5 = function( buffer ) {
     var md5 = crypto.createHash( 'md5' );
     md5.update( buffer );
     return md5.digest( 'hex' );
+}
+
+/**
+ * 提取zip文件
+ * 
+ * @param {string} zipFile zip文件名
+ * @param {string} target 解压路径
+ * @return {Deferred}
+ */
+exports.unzip = function ( zipFile, target ) {
+    var path = require( 'path' );
+    var parentDir = path.resolve( target, '..' );
+
+    var tmpDirName = 'tmp' + ( (new Date()).getTime() + Math.random() );
+    var tmpDir = path.resolve( parentDir, tmpDirName );
+
+    require( 'mkdirp' ).sync( parentDir );
+
+    var AdmZip = new require( 'adm-zip' )( zipFile );
+
+    AdmZip.extractAllTo( target );
+    // moveExtractToTarget( tmpDir, target );
+};
+
+/**
+ * 将压缩文件的提取目录从临时目录移动到目标目录
+ * 
+ * @inner
+ * @param {string} tempDir 提取目录
+ * @param {string} target 目标目录
+ */
+function moveExtractToTarget( tempDir, target ) {
+    var fs = require( 'fs' );
+    var path = require( 'path' );
+    if ( !fs.existsSync( tempDir ) ) {
+        return;
+    }
+
+    var source = fs.readdirSync( tempDir )[ 0 ];
+    if ( source ) {
+        fs.renameSync(
+            path.resolve( tempDir, source ),
+            target
+        );
+    }
+
+    fs.rmdirSync( tempDir );
 }
 
 

@@ -16,6 +16,7 @@
  **/
 var Deferred = require( './Deferred' );
 
+
 /**
  * @param {string} reply github push过来的消息
  */
@@ -26,13 +27,19 @@ exports.create = function( reply ) {
     var headers = data.headers;
     var body = data.body;
 
+    var event = headers[ 'X-GitHub-Event' ];
+    if ( event === 'create' ) {
+        if ( body.ref_type === 'tag' ) {
+            return require( '../workers/create-tag-handler' );
+        }
+    }
+
     setTimeout(function(){
         def.resolve( headers, body );
     }, 100);
 
     return def;
 }
-
 
 
 

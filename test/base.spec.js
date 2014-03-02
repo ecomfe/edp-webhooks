@@ -33,6 +33,16 @@ describe('base', function(){
             fs.unlinkSync( file );
         });
     });
+
+    it('unzip', function(){
+        var zipfile = path.join( __dirname, 'test.zip' );
+        var target = path.join( __dirname, 'tmp', 'test' );
+        base.unzip( zipfile, target );
+
+        expect( fs.existsSync( path.join( target ) ) ).toBe( true );
+        expect( fs.existsSync( path.join( target, 'Makefile' ) ) ).toBe( true );
+        expect( fs.existsSync( path.join( target, 'curl.sh' ) ) ).toBe( true );
+    });
 });
 
 
