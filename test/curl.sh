@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+curl \
+  -X POST \
+  -d '{"ref":"refs/tags/0.0.8","after":"86b407e6f0d8677e9b5455df5af6997263092a4a","before":"0000000000000000000000000000000000000000","created":true,"deleted":false,"forced":true,"compare":"https://github.com/leeight/node.hi/compare/0.0.8","commits":[],"head_commit":{"id":"041e0df7fcebe6b2062d80717f68eaa5c6d0cf3b","distinct":true,"message":"Update README.md","timestamp":"2014-03-01T04:21:11-08:00","url":"https://github.com/leeight/node.hi/commit/041e0df7fcebe6b2062d80717f68eaa5c6d0cf3b","author":{"name":"leeight","email":"leeight@gmail.com","username":"leeight"},"committer":{"name":"leeight","email":"leeight@gmail.com","username":"leeight"},"added":[],"removed":[],"modified":["README.md"]},"repository":{"id":2663990,"name":"node.hi","url":"https://github.com/leeight/node.hi","description":"baidu hi based on NodeJS","homepage":"http://web.im.baidu.com","watchers":4,"stargazers":4,"forks":0,"fork":false,"size":1124,"owner":{"name":"leeight","email":"leeight@gmail.com"},"private":false,"open_issues":0,"has_issues":true,"has_downloads":true,"has_wiki":true,"created_at":1319790971,"pushed_at":1393741261,"master_branch":"master"},"pusher":{"name":"leeight","email":"leeight@gmail.com"}}' \
+  http://localhost:3000/payload
