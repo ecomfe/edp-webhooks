@@ -19,22 +19,23 @@ var npm = require( 'npm' );
 var path = require( 'path' );
 
 describe("npm", function(){
-    xit("search", function(){
+    it("publish", function(){
         var flag = false;
         waitsFor(function(){ return flag; });
 
         npm.load( base.getNpmConfig(), function( er ) {
             if ( er ) throw er;
             var dir = path.join( __dirname, '..', 'data', 'github.com', 'leeight', 'node.hi', '0.0.6', 'node.hi-0.0.6' );
-            npm.commands.publish( [ dir ], function( er, data ) {
-                // 失败了
-                // er == { [Error: publish fail] code: 'EPUBLISHCONFLICT', pkgid: 'my-test@0.0.1' }
-                if ( er ) {
-                    console.log( 'code = %s, pkgid = %s', er.code, er.pkgid );
-                }
+
+            var d = base.publish( dir );
+            d.fail(function( er ){
+                console.log( er );
+            }).ensure(function(){
                 flag = true;
-                runs(function(){
-                });
+            });
+
+            runs(function(){
+                expect( d.state ).not.toBe( 'pending' );
             });
         });
     });

@@ -62,14 +62,9 @@ module.exports = exports = function( headers, body ) {
                 return;
             }
 
-            npm.commands.publish( [ pkgloc ], function( er, data ) {
-                if ( er ) {
-                    all.reject( er );
-                    return;
-                }
-                // 2. 生成jsduck
-                all.resolve();
-            });
+            Deferred.all( base.publish( pkgloc ), base.gendocs( pkgloc, body ) )
+                .done( function(){ all.resolve() } )
+                .fail( function( e ){ all.reject( e ) } );
         });
     }
 

@@ -15,6 +15,9 @@
  *  
  **/
 var Deferred = require( './Deferred' );
+var fs = require( 'fs' );
+var path = require( 'path' );
+var npm = require( 'npm' );
 
 /**
  * 下载一个文件
@@ -50,6 +53,108 @@ exports.download = function( url, opt_saved ) {
 
     return d;
 }
+
+/**
+ * 发布package到edp.baidu.com
+ * @param {string} pkgloc package的目录.
+ * @return {Deferred}
+ */
+exports.publish = function( pkgloc ) {
+    var d = new Deferred();
+
+    npm.commands.publish( [ pkgloc ], function( er, data ) {
+        if ( er ) {
+            d.reject( er );
+            return;
+        }
+
+        d.resolve();
+    });
+
+    return d;
+}
+
+/**
+ * 生成package的文档.
+ * @param {string} pkgloc package的目录.
+ * @param {Object} requestBody github event的请求体内容.
+ * @return {Deferred}
+ */
+exports.gendocs = function( pkgloc, requestBody ) {
+    var d = new Deferred();
+
+    if ( !fs.existsSync( path.join( pkgloc, 'jsduck', 'config.json' ) ) ) {
+        process.nextTick(function(){
+            d.resolve();
+        });
+        return d;
+    };
+
+    // 生成jsduck文档
+    var child = require( 'child_process' ).spawn(
+        'jsduck',
+        [ '--config=jsduck/config.json' ],
+        {
+            cwd: pkgloc,
+            env: process.env
+        }
+    );
+    var stderr = [];
+    child.stderr.on( 'data', function( data ) {
+        stderr.push( data );
+    });
+    child.on( 'close', function( code ) {
+        if ( code !== 0 ) {
+            d.reject( new Error( Buffer.concat( stderr ) ) );
+            return;
+        }
+
+        console.log( Buffer.concat( stderr ).toString() );
+
+        var docDir = path.join( pkgloc, 'doc', 'api' );
+        if ( !fs.existsSync( docDir ) ) {
+            d.reject( new Error( 'No such directory ' + docDir ) );
+            return;
+        }
+
+        var uploadShell = path.join( __dirname, 'upload.sh' );
+
+        // XXX 生成的文档默认放置在${pkgloc}/doc/api目录
+        //
+        // 文档生成成功了，把它放到 http://ecomfe.github.io/api 下面去.
+        // 1. mv ${pkgloc}/doc/api -> ${ecomfe/api}/${repository.name}/${body.ref}
+        // 2. cd ${ecomfe/api} && git add .
+        // 3. git commit -a -m 'Add ${repository.name}/${body.ref}, auto commit'
+        // 4. git push origin gh-pages
+        var child = require( 'child_process' ).spawn(
+            'bash',
+            // bash upload.sh localDocDirectory serverDocDirectory
+            [  uploadShell, docDir, requestBody.repository.name + '/' + requestBody.ref ]
+        );
+
+        stderr = [];
+        var stdout = [];
+        child.stdout.on( 'data', function( data ) {
+            stdout.push( data );
+        });
+        child.stderr.on( 'data', function( data ) {
+            stderr.push( data );
+        });
+        child.on( 'close', function( code ){
+            console.log( Buffer.concat( stderr ).toString() );
+            console.log( Buffer.concat( stdout ).toString() );
+
+            if ( code !== 0 ) {
+                d.reject( new Error( 'Upload docs failed.' ) );
+                return;
+            }
+
+            d.resolve();
+        });
+    });
+
+    return d;
+};
 
 /**
  * 计算md5的值
