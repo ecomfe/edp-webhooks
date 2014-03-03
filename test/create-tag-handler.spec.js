@@ -20,7 +20,7 @@ var path = require( 'path' );
 var CreateTagHandler = require( '../workers/create-tag-handler' );
 
 describe('create-tag-handler', function(){
-    it('default', function(){
+    xit('default', function(){
         var headers = {};
         var body = {
             ref: '0.0.6',

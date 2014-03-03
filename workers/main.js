@@ -16,6 +16,8 @@
  **/
 var base = require( '../base/base' );
 var edp = require( 'edp-core' );
+var fs = require( 'fs' );
+var path = require( 'path' );
 var Worker = require( '../base/Worker' );
 
 var client = base.createRedisClient();
@@ -30,6 +32,9 @@ client.on( 'connect', function(){
             var worker = Worker.create( reply );
             worker.then( next, function( e ) {
                 edp.log.error( e.toString() );
+                var log = require( 'util' ).format( '%s\t%s\t%s',
+                    new Date(), reply, e.toString() );
+                fs.appendFileSync( path.join( __dirname, '..', 'error.log' ), log );
                 next();
             } );
         });

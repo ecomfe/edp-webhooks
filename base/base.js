@@ -75,6 +75,39 @@ exports.publish = function( pkgloc ) {
 }
 
 /**
+ * @ignore
+ */
+var EDP_CONFIG = null;
+
+/**
+ * 根据key读取配置的内容
+ *
+ * @param {string} key 配置的key
+ * @return {*}
+ */
+exports.getConfig = function( key ) {
+    if ( !EDP_CONFIG ) {
+        var yaml = require('js-yaml');
+        var file = process.env.EDP_WEBHOOKS_CONFIG || 'config.yml';
+        file = path.join( __dirname, '..', file );
+
+        EDP_CONFIG = yaml.safeLoad( fs.readFileSync( file, 'utf-8' ) );
+    }
+
+    var parts = key.split( '.' );
+    var cur = EDP_CONFIG;
+    for ( var part; part = parts.shift(); ) {
+        if ( cur[part] != null ) {
+            cur = cur[part];
+        }
+        else {
+            return null;
+        }
+    }
+    return cur;
+};
+
+/**
  * 生成package的文档.
  * @param {string} pkgloc package的目录.
  * @param {Object} requestBody github event的请求体内容.
@@ -94,10 +127,7 @@ exports.gendocs = function( pkgloc, requestBody ) {
     var child = require( 'child_process' ).spawn(
         'jsduck',
         [ '--config=jsduck/config.json' ],
-        {
-            cwd: pkgloc,
-            env: process.env
-        }
+        { cwd: pkgloc, env: process.env }
     );
     var stderr = [];
     child.stderr.on( 'data', function( data ) {
@@ -126,11 +156,15 @@ exports.gendocs = function( pkgloc, requestBody ) {
         // 2. cd ${ecomfe/api} && git add .
         // 3. git commit -a -m 'Add ${repository.name}/${body.ref}, auto commit'
         // 4. git push origin gh-pages
-        var child = require( 'child_process' ).spawn(
-            'bash',
-            // bash upload.sh localDocDirectory serverDocDirectory
-            [  uploadShell, docDir, requestBody.repository.name + '/' + requestBody.ref ]
-        );
+
+        // bash upload.sh localDocDirectory serverDocDirectory apiReposDir
+        var args = [
+            uploadShell,
+            docDir,
+            requestBody.repository.name + '/' + requestBody.ref,
+            exports.getConfig( 'repos.api' )
+        ];
+        var child = require( 'child_process' ).spawn( 'bash', args );
 
         stderr = [];
         var stdout = [];
@@ -221,31 +255,15 @@ function moveExtractToTarget( tempDir, target ) {
  * @return {Object}
  */
 exports.getNpmConfig = function() {
-    var config = {};
-
-    config._auth = 'ZWNvbWZlOmVjb21mZWF0YmVpamluZyZzaGFuZ2hhaQ==';
-    config.registry = 'http://registry.edp.baidu.com/';
-    config.email = 'ecomfe@gmail.com';
-    config.proxy = null;
-    config['https-proxy'] = null;
-    config['http-proxy'] = null;
-
-    return config;
+    return exports.getConfig( 'npm' );
 }
 
 /**
  * @return {RedisClient}
  */
 exports.createRedisClient = function() {
-    var port = 6379;
-    if ( process.env.EDP_WEBHOOKS_REDIS_PORT ) {
-        port = parseInt( process.env.EDP_WEBHOOKS_REDIS_PORT, 10 );
-    }
-
-    var host = '127.0.0.1';
-    if ( process.env.EDP_WEBHOOKS_REDIS_HOST ) {
-        host = process.env.EDP_WEBHOOKS_REDIS_HOST;
-    }
+    var port = exports.getConfig( 'redis.port' );
+    var host = exports.getConfig( 'redis.host' );
 
     var redis = require( 'redis' );
     var client = redis.createClient( port, host );

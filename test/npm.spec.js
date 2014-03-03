@@ -19,7 +19,7 @@ var npm = require( 'npm' );
 var path = require( 'path' );
 
 describe("npm", function(){
-    it("publish", function(){
+    xit("publish", function(){
         var flag = false;
         waitsFor(function(){ return flag; });
 

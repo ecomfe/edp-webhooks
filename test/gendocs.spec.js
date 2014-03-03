@@ -19,7 +19,7 @@ var path = require( 'path' );
 var fs = require( 'fs' );
 
 describe('base', function(){
-    it('gendocs', function(){
+    xit('gendocs', function(){
         var pkgloc = '/Users/leeight/local/leeight.github.com/esui';
         var body = {
             ref: '3.1.2-dev',
