@@ -110,6 +110,23 @@ function moveExtractToTarget( tempDir, target ) {
     fs.rmdirSync( tempDir );
 }
 
+/**
+ * 获取edp.baidu.com中ecomfe帐号的配置信息
+ * 然后把package上传上去
+ * @return {Object}
+ */
+exports.getNpmConfig = function() {
+    var config = {};
+
+    config._auth = 'ZWNvbWZlOmVjb21mZWF0YmVpamluZyZzaGFuZ2hhaQ==';
+    config.registry = 'http://registry.edp.baidu.com/';
+    config.email = 'ecomfe@gmail.com';
+    config.proxy = null;
+    config['https-proxy'] = null;
+    config['http-proxy'] = null;
+
+    return config;
+}
 
 
 

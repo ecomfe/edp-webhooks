@@ -15,6 +15,7 @@
  * 读取redis里面的内容，然后依次处理
  **/
 var Worker = require( '../base/Worker' );
+var edp = require( 'edp-core' );
 
 var redis = require( 'redis' );
 var client = redis.createClient();
@@ -26,10 +27,10 @@ client.on( 'connect', function(){
                 return;
             }
             var worker = Worker.create( reply );
-            worker.ensure(function( headers, body ){
-                console.log( JSON.stringify( headers ) );
+            worker.then( next, function( e ) {
+                edp.log.error( e.toString() );
                 next();
-            });
+            } );
         });
     }
     next();

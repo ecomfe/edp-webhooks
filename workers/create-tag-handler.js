@@ -21,6 +21,7 @@ var base = require( '../base/base' );
 var npm = require( 'npm' );
 var util = require( 'util' );
 var path = require( 'path' );
+var fs = require( 'fs' );
 
 module.exports = exports = function( headers, body ) {
     var all = new Deferred();
@@ -30,25 +31,53 @@ module.exports = exports = function( headers, body ) {
     var zipfile = path.join( __dirname, '..', 'data', 'github.com', body.repository.full_name, body.ref + '.zip' );
     var url = util.format( tpl, body.repository.full_name, body.ref );
 
-    base.download( url, zipfile )
-        .done(function(){
-            // 解压zip
-            base.unzip( zipfile, zipfile.replace( /\.zip$/, '' ) );
+    function done() {
+        // 解压zip
+        var target = zipfile.replace( /\.zip$/, '' );
+        base.unzip( zipfile, target );
 
-            // 1. 上传到edp
+        // 检查package.json是否存在，以及package.json中的版本跟tag的版本是否一致.
+        var pkgloc = path.join( target, body.repository.name + '-' + body.ref );
+        var file = path.join( pkgloc, '', 'package.json' );
+        if ( !fs.existsSync( file ) ) {
+            all.reject( new Error( 'No such file ' + path.join( target, 'package.json' ) ) );
+            return;
+        }
 
-            // 2. 生成jsduck
-            all.resolve();
-        }).fail(function(){
-            all.reject();
+        var pkg = JSON.parse( fs.readFileSync( file, 'utf-8' ) );
+        if ( !pkg ) {
+            all.reject( new Error( 'Invalid package.json format' ) );
+            return;
+        }
+
+        if ( pkg.version !== body.ref ) {
+            all.reject( new Error( 'Package version ' + pkg.version + ' mismatch with the tag version ' + body.ref ) );
+            return;
+        }
+
+        // 1. 上传到edp
+        npm.load( base.getNpmConfig(), function( er ) {
+            if ( er ) {
+                all.reject( er );
+                return;
+            }
+
+            npm.commands.publish( [ pkgloc ], function( er, data ) {
+                if ( er ) {
+                    all.reject( er );
+                    return;
+                }
+                // 2. 生成jsduck
+                all.resolve();
+            });
         });
-    /*
-    npm.load( config, function( er ) {
-        if ( er ) throw err;
+    }
 
-        npm.commands.publish( [ '.' ])
-    });
-    */
+    function fail() {
+        all.reject( new Error( 'Download ' + url + ' failed.' ) );
+    }
+
+    base.download( url, zipfile ).then( done, fail );
 
     return all;
 }

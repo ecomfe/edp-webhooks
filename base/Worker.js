@@ -15,6 +15,7 @@
  *  
  **/
 var Deferred = require( './Deferred' );
+var edp = require( 'edp-core' );
 
 
 /**
@@ -27,16 +28,24 @@ exports.create = function( reply ) {
     var headers = data.headers;
     var body = data.body;
 
-    var event = headers[ 'X-GitHub-Event' ];
+    var event = headers[ 'x-github-event' ];
     if ( event === 'create' ) {
         if ( body.ref_type === 'tag' ) {
-            return require( '../workers/create-tag-handler' );
+            edp.log.info( 'Process %s/%s event', event, body.ref_type );
+            var handler = require( '../workers/create-tag-handler' );
+            return handler( headers, body );
+        }
+        else {
+            edp.log.warn( 'Ignore %s/%s event', event, body.ref_type );
         }
     }
+    else {
+        edp.log.warn( 'Ignore %s event', event );
+    }
 
-    setTimeout(function(){
-        def.resolve( headers, body );
-    }, 100);
+    process.nextTick(function(){
+        def.resolve();
+    });
 
     return def;
 }
