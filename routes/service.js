@@ -23,10 +23,10 @@ var path = require( 'path' );
  */
 exports.payload = function(req, res){
     // 把 headers 和 body 存储下来，然后定时任务自动去处理
-    var redis = require( 'redis' );
-    var client = redis.createClient();
+    var client = base.createRedisClient();
     client.on( 'connect', function(){
-        client.lpush( 'github_events', JSON.stringify({
+        var key = base.getRedisKey( 'github_events' );
+        client.lpush( key, JSON.stringify({
             headers: req.headers,
             body: req.body
         }), function( err, reply ){

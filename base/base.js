@@ -128,6 +128,34 @@ exports.getNpmConfig = function() {
     return config;
 }
 
+/**
+ * @return {RedisClient}
+ */
+exports.createRedisClient = function() {
+    var port = 6379;
+    if ( process.env.EDP_WEBHOOKS_REDIS_PORT ) {
+        port = parseInt( process.env.EDP_WEBHOOKS_REDIS_PORT, 10 );
+    }
+
+    var host = '127.0.0.1';
+    if ( process.env.EDP_WEBHOOKS_REDIS_HOST ) {
+        host = process.env.EDP_WEBHOOKS_REDIS_HOST;
+    }
+
+    var redis = require( 'redis' );
+    var client = redis.createClient( port, host );
+
+    return client;
+}
+
+/**
+ * @param {string} key
+ * @return {string}
+ */
+exports.getRedisKey = function( key ) {
+    return 'edp_webhooks_' + key;
+}
+
 
 
 

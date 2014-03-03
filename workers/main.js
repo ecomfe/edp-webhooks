@@ -14,14 +14,15 @@
  * @description 
  * 读取redis里面的内容，然后依次处理
  **/
-var Worker = require( '../base/Worker' );
+var base = require( '../base/base' );
 var edp = require( 'edp-core' );
+var Worker = require( '../base/Worker' );
 
-var redis = require( 'redis' );
-var client = redis.createClient();
+var client = base.createRedisClient();
 client.on( 'connect', function(){
     function next() {
-        client.rpop( 'github_events', function( err, reply ){
+        var key = base.getRedisKey( 'github_events' );
+        client.rpop( key, function( err, reply ){
             if ( !reply ) {
                 next();
                 return;
