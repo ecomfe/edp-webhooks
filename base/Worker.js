@@ -17,38 +17,75 @@
 var Deferred = require( './Deferred' );
 var edp = require( 'edp-core' );
 
+/**
+ * @constructor
+ * @param {Object} headers github请求的header信息.
+ * @param {Object} body github请求的body信息.
+ */
+function Worker( headers, body ) {
+    this.headers = headers;
+    this.body = body;
+};
 
 /**
- * @param {string} reply github push过来的消息
+ * 如果符合Worker的需要，返回true，否则返回false.
+ * @return {boolean}
  */
-exports.create = function( reply ) {
-    var def = new Deferred();
+Worker.prototype.match = function() {
+    return false;
+};
 
+/**
+ * 开始启用Worker的运行，返回Deferred对象.
+ * @return {Deferred}
+ */
+Worker.prototype.start = function() {
+    throw new Error("Unimplemented method");
+};
+
+/**
+ * @ignore
+ */
+var WorkerPool = [];
+
+/**
+ * 注册一个新的Worker
+ * @param {Function} ctor worker的构造函数.
+ */
+Worker.add = function( ctor ) {
+    WorkerPool.push( ctor );
+};
+
+/**
+ * @static
+ * @param {string} reply github push过来的消息
+ * @return {Array.<Worker>}
+ */
+Worker.create = function( reply ) {
     var data = JSON.parse( reply );
     var headers = data.headers;
     var body = data.body;
 
-    var event = headers[ 'x-github-event' ];
-    if ( event === 'create' ) {
-        if ( body.ref_type === 'tag' ) {
-            edp.log.info( 'Process %s/%s event', event, body.ref_type );
-            var handler = require( '../workers/create-tag-handler' );
-            return handler( headers, body );
+    var workers = [];
+    WorkerPool.forEach(function( ctor ) {
+        var instance = new ctor( headers, body );
+        if ( instance.match() ) {
+            workers.push( instance );
         }
-        else {
-            edp.log.warn( 'Ignore %s/%s event', event, body.ref_type );
-        }
-    }
-    else {
-        edp.log.warn( 'Ignore %s event', event );
-    }
-
-    process.nextTick(function(){
-        def.resolve();
     });
 
-    return def;
+    if ( workers.length <= 0 ) {
+        var event = headers[ 'x-github-event' ];
+        edp.log.warn( 'Ignore %s/%s event', event, body.ref_type );
+    }
+
+    return workers;
 }
+
+/**
+ * @ignore
+ */
+module.exports = exports = Worker;
 
 
 

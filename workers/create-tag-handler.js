@@ -16,19 +16,52 @@
  **/
 var Deferred = require( '../base/Deferred' );
 var base = require( '../base/base' );
+var Worker = require( '../base/Worker' );
 
 // npm link npm
 var npm = require( 'npm' );
 var util = require( 'util' );
 var path = require( 'path' );
 var fs = require( 'fs' );
+var edp = require( 'edp-core' );
 
-module.exports = exports = function( headers, body ) {
+/**
+ * @constructor
+ * @extends Worker
+ */
+function CreateTagHandler( headers, body ) {
+    Worker.call( this, headers, body );
+}
+util.inherits( CreateTagHandler, Worker );
+
+/** @inheritdoc */
+CreateTagHandler.prototype.info = function() {
+    var event = this.headers[ 'x-github-event' ];
+    return util.format( 'Process %s/%s event by CreateTagHandler',
+        event, this.body.ref_type );
+}
+
+/** @inheritdoc */
+CreateTagHandler.prototype.match = function() {
+    var event = this.headers[ 'x-github-event' ];
+    var refType = this.body[ 'ref_type' ];
+
+    return ( event === 'create' ) && ( refType === 'tag' );
+}
+
+/** @inheritdoc */
+CreateTagHandler.prototype.start = function() {
+    edp.log.info( this.info() );
+
+    var headers = this.headers;
+    var body = this.body;
+
     var all = new Deferred();
 
     // body.html_url === "https://github.com/leeight/node.hi"
     var tpl = 'https://codeload.github.com/%s/zip/%s';
-    var zipfile = path.join( __dirname, '..', 'data', 'github.com', body.repository.full_name, body.ref + '.zip' );
+    var zipfile = path.join( __dirname, '..', 'data', 'github.com',
+        body.repository.full_name, body.ref + '.zip' );
     var url = util.format( tpl, body.repository.full_name, body.ref );
 
     function done() {
@@ -76,6 +109,11 @@ module.exports = exports = function( headers, body ) {
 
     return all;
 }
+
+/**
+ * @ignore
+ */
+module.exports = exports = CreateTagHandler;
 
 
 
