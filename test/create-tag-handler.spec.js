@@ -20,7 +20,7 @@ var path = require( 'path' );
 var CreateTagHandler = require( '../workers/create-tag-handler' );
 
 describe('create-tag-handler', function(){
-    xit('default', function(){
+    it('default', function(){
         var headers = {
             'x-github-event': 'create'
         };
