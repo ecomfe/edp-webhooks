@@ -177,6 +177,7 @@ exports.gendocs = function( pkgloc, requestBody ) {
             stderr.push( data );
         });
         child.on( 'close', function( code ){
+            console.log( Buffer.concat( stderr ).toString() );
             if ( code !== 0 ) {
                 d.reject( new Error( 'Upload docs failed.' ) );
                 return;
