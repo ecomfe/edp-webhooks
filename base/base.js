@@ -166,6 +166,7 @@ exports.gendocs = function( pkgloc, requestBody ) {
             exports.getConfig( 'repos.api' )
         ];
         edp.log.debug( 'Launch upload.sh job.' );
+        edp.log.debug( '  Arguments: ' + args.join( ' ' ) );
         var child = require( 'child_process' ).spawn( 'bash', args );
 
         stderr = [];
