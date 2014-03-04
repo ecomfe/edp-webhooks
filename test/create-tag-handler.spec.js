@@ -21,17 +21,22 @@ var CreateTagHandler = require( '../workers/create-tag-handler' );
 
 describe('create-tag-handler', function(){
     xit('default', function(){
-        var headers = {};
+        var headers = {
+            'x-github-event': 'create'
+        };
         var body = {
-            ref: '0.0.6',
+            ref: '0.0.20',
+            ref_type: 'tag',
             repository: {
+                name: 'node.hi',
                 full_name: 'leeight/node.hi'
             }
         };
 
-        var def = CreateTagHandler( headers, body );
+        var worker = new CreateTagHandler( headers, body );
+        var def = worker.start();
 
-        waitsFor(function(){ return def.state !== 'pending' });
+        waitsFor(function(){ return def.state !== 'pending' }, 'x', 10 * 1000);
 
         runs(function(){
             var parentDir = path.join( __dirname, '..', 'data', 'github.com', body.repository.full_name );

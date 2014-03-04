@@ -65,6 +65,8 @@ CreateTagHandler.prototype.start = function() {
     var url = util.format( tpl, body.repository.full_name, body.ref );
 
     function done() {
+        edp.log.debug( 'Successfully downloaded %s', url );
+
         // 解压zip
         var target = zipfile.replace( /\.zip$/, '' );
         base.unzip( zipfile, target );
@@ -89,12 +91,14 @@ CreateTagHandler.prototype.start = function() {
         }
 
         // 1. 上传到edp
+        edp.log.debug( 'Launch npm.load job' );
         npm.load( base.getNpmConfig(), function( er ) {
             if ( er ) {
                 all.reject( er );
                 return;
             }
 
+            edp.log.debug( 'Launch base.publish and base.gendocs job' );
             Deferred.all( base.publish( pkgloc ), base.gendocs( pkgloc, body ) )
                 .done( function(){ all.resolve() } )
                 .fail( function( e ){ all.reject( e ) } );

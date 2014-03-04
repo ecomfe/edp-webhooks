@@ -25,7 +25,7 @@ describe('base', function(){
         var file = path.join( __dirname, path.basename( url ) );
         var def = base.download( url, file );
 
-        waitsFor(function(){ return def.state !== 'pending' });
+        waitsFor(function(){ return def.state !== 'pending' }, 'x', 10 * 1000);
 
         runs(function(){
             expect( fs.existsSync( file ) ).toBe( true );

@@ -18,6 +18,7 @@ var Deferred = require( './Deferred' );
 var fs = require( 'fs' );
 var path = require( 'path' );
 var npm = require( 'npm' );
+var edp = require( 'edp-core' );
 
 /**
  * 下载一个文件
@@ -28,7 +29,6 @@ var npm = require( 'npm' );
 exports.download = function( url, opt_saved ) {
     var d = new Deferred();
 
-    var lib = /^https/.test( url ) ? require( 'https' ) : require( 'http' );
     var fs = require( 'fs' );
     var path = require( 'path' );
 
@@ -40,16 +40,16 @@ exports.download = function( url, opt_saved ) {
     }
 
     var stream = fs.createWriteStream( fullPath );
-    lib.get( url, function( res ) {
-        try {
-            res.pipe( stream );
-            d.resolve();
-        } catch ( ex ) {
-            d.reject( ex );
-        }
-    }).on( 'error', function( error ){
-        d.reject( error );
+    stream.on( 'error', function( ex ){
+        d.reject( ex );
     });
+
+    stream.on( 'close', function() {
+        d.resolve();
+    });
+
+    var request = require( 'request' );
+    request( url ).pipe( stream );
 
     return d;
 }
@@ -124,6 +124,7 @@ exports.gendocs = function( pkgloc, requestBody ) {
     };
 
     // 生成jsduck文档
+    edp.log.debug( 'Launch gen jsduck docs job.' );
     var child = require( 'child_process' ).spawn(
         'jsduck',
         [ '--config=jsduck/config.json' ],
@@ -139,7 +140,7 @@ exports.gendocs = function( pkgloc, requestBody ) {
             return;
         }
 
-        console.log( Buffer.concat( stderr ).toString() );
+        edp.log.debug( 'Successfully generated jsduck docs.' );
 
         var docDir = path.join( pkgloc, 'doc', 'api' );
         if ( !fs.existsSync( docDir ) ) {
@@ -164,6 +165,7 @@ exports.gendocs = function( pkgloc, requestBody ) {
             requestBody.repository.name + '/' + requestBody.ref,
             exports.getConfig( 'repos.api' )
         ];
+        edp.log.debug( 'Launch upload.sh job.' );
         var child = require( 'child_process' ).spawn( 'bash', args );
 
         stderr = [];
@@ -175,13 +177,12 @@ exports.gendocs = function( pkgloc, requestBody ) {
             stderr.push( data );
         });
         child.on( 'close', function( code ){
-            console.log( Buffer.concat( stderr ).toString() );
-            console.log( Buffer.concat( stdout ).toString() );
-
             if ( code !== 0 ) {
                 d.reject( new Error( 'Upload docs failed.' ) );
                 return;
             }
+
+            edp.log.debug( 'Successfully uploaded docs.' );
 
             d.resolve();
         });
@@ -221,7 +222,6 @@ exports.unzip = function ( zipFile, target ) {
     var AdmZip = new require( 'adm-zip' )( zipFile );
 
     AdmZip.extractAllTo( target );
-    // moveExtractToTarget( tmpDir, target );
 };
 
 /**
