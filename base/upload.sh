@@ -11,6 +11,8 @@ API_REPOS_LOCATION="$3"
 
 cd "${API_REPOS_LOCATION}"
 git checkout gh-pages
+git reset --hard origin/HEAD
+git pull origin gh-pages
 
 mkdir -p $(dirname "$SERVER_DOC_DIR")
 [ -e "${SERVER_DOC_DIR}" ] && git rm -r "${SERVER_DOC_DIR}"
