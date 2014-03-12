@@ -1,0 +1,19 @@
+[
+  {
+    "name": "edp-webhooks",
+    "script": "app.js",
+    "env": {
+      "EDP_WEBHOOKS_CONFIG": "data/config.dev.yml"
+    }
+  },
+  {
+    "name": "edp-webhooks-worker",
+    "script": "/home/users/liyubei/.jumbo/bin/node",
+    "exec_interpreter": "/lib64/ld-linux-x86-64.so.2",
+    "exec_mode": "fork_mode",
+    "args": "['workers/main.js']",
+    "env": {
+      "EDP_WEBHOOKS_CONFIG": "data/config.dev.yml"
+    }
+  }
+]
