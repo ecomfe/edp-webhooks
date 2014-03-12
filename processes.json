@@ -1,5 +1,12 @@
 [
   {
+    "name": "redis",
+    "script": "/home/users/liyubei/.jumbo/bin/redis-server",
+    "exec_interpreter": "/lib64/ld-linux-x86-64.so.2",
+    "exec_mode": "fork_mode",
+    "args": "['redis/redis.conf']"
+  },
+  {
     "name": "edp-webhooks",
     "script": "app.js",
     "env": {
