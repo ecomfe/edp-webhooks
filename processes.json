@@ -1,12 +1,5 @@
 [
   {
-    "name": "redis",
-    "script": "/home/users/liyubei/.jumbo/bin/redis-server",
-    "exec_interpreter": "/lib64/ld-linux-x86-64.so.2",
-    "exec_mode": "fork_mode",
-    "args": "['redis/redis.conf']"
-  },
-  {
     "name": "edp-webhooks",
     "script": "app.js",
     "env": {
@@ -15,7 +8,7 @@
   },
   {
     "name": "edp-webhooks-worker",
-    "script": "/home/users/liyubei/.jumbo/bin/node",
+    "script": "/home/work/.jumbo/bin/node",
     "exec_interpreter": "/lib64/ld-linux-x86-64.so.2",
     "exec_mode": "fork_mode",
     "args": "['workers/main.js']",

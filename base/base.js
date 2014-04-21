@@ -115,6 +115,11 @@ exports.getConfig = function( key ) {
  */
 exports.gendocs = function( pkgloc, requestBody ) {
     var d = new Deferred();
+    // 暂时禁用这个功能，意义不是很大
+    process.nextTick(function(){
+        d.resolve();
+    });
+    return d;
 
     if ( !fs.existsSync( path.join( pkgloc, 'jsduck', 'config.json' ) ) ) {
         process.nextTick(function(){
